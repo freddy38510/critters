@@ -195,7 +195,7 @@ export default class Critters {
     // Parse the generated HTML in a DOM we can mutate
     const document = createDocument(html);
 
-    document.body.className = this.bodyClasses
+    document.body.className = this.bodyClasses || document.body.className
 
     // `external:false` skips processing of external sheets
     if (this.options.external !== false) {

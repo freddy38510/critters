@@ -430,7 +430,7 @@ Critters.prototype.process = function process (html) {
     // const publicPath = compiler.options.output.publicPath;
     // Parse the generated HTML in a DOM we can mutate
     var document = createDocument(html);
-    document.body.className = _this.bodyClasses; // `external:false` skips processing of external sheets
+    document.body.className = _this.bodyClasses || document.body.className; // `external:false` skips processing of external sheets
 
     var _temp3 = function () {
       if (_this.options.external !== false) {
