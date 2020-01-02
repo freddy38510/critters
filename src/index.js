@@ -122,8 +122,9 @@ export default class Critters {
       this.urlFilter = this.urlFilter.test.bind(this.urlFilter);
     }
     this.logger = options.logger;
-    this.outputPath = options.outputPath
-    this.publicPath = options.publicPath
+    this.outputPath = options.outputPath;
+    this.publicPath = options.publicPath;
+    this.bodyClasses = options.bodyClasses;
   }
 
   /**

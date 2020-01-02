@@ -337,6 +337,7 @@ var Critters = function Critters(options) {
   this.logger = options.logger;
   this.outputPath = options.outputPath;
   this.publicPath = options.publicPath;
+  this.bodyClasses = options.bodyClasses;
 };
 /**
  * Invoked by Webpack during plugin initialization
