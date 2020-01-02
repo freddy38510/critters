@@ -14,7 +14,7 @@
  * the License.
  */
 
-import css from 'css';
+const css = require('css');
 
 /**
  * Parse a textual CSS Stylesheet into a Stylesheet instance.
@@ -141,3 +141,10 @@ function filterSelectors (predicate) {
     this.selectors = this.selectors.filter(predicate);
   }
 }
+
+module.exports.parseStylesheet = parseStylesheet;
+module.exports.serializeStylesheet = serializeStylesheet
+module.exports.markOnly = markOnly
+module.exports.applyMarkedSelectors = applyMarkedSelectors
+module.exports.walkStyleRules = walkStyleRules
+module.exports.walkStyleRulesWithReverseMirror = walkStyleRulesWithReverseMirror

@@ -16,16 +16,17 @@
 
 import path from 'path';
 import prettyBytes from 'pretty-bytes';
-import sources from 'webpack-sources';
+// import sources from 'webpack-sources';
 import postcss from 'postcss';
 import cssnano from 'cssnano';
-import log from 'webpack-log';
+// import log from 'webpack-log';
+// import log from '@quasar/app/lib/helpers/logger'
 import { createDocument, serializeDocument, setNodeText } from './dom';
 import { parseStylesheet, serializeStylesheet, walkStyleRules, walkStyleRulesWithReverseMirror, markOnly, applyMarkedSelectors } from './css';
-import { tap } from './util';
+// import { tap } from './util';
 
 // Used to annotate this plugin's hooks in Tappable invocations
-const PLUGIN_NAME = 'critters-webpack-plugin';
+// const PLUGIN_NAME = 'critters-webpack-plugin';
 
 /**
  * The mechanism to use for lazy-loading stylesheets.
@@ -113,19 +114,22 @@ const PLUGIN_NAME = 'critters-webpack-plugin';
  */
 export default class Critters {
   /** @private */
-  constructor (options) {
+  constructor(options) {
     this.options = Object.assign({ logLevel: 'info' }, options || {});
     this.options.pruneSource = this.options.pruneSource !== false;
     this.urlFilter = this.options.filter;
     if (this.urlFilter instanceof RegExp) {
       this.urlFilter = this.urlFilter.test.bind(this.urlFilter);
     }
-    this.logger = log({ name: 'Critters', unique: true, level: this.options.logLevel });
+    this.logger = options.logger;
+    this.outputPath = options.outputPath
+    this.publicPath = options.publicPath
   }
 
   /**
    * Invoked by Webpack during plugin initialization
    */
+  /*
   apply (compiler) {
     // hook into the compiler to get a Compilation instance...
     tap(compiler, 'compilation', PLUGIN_NAME, false, compilation => {
@@ -160,12 +164,13 @@ export default class Critters {
       }
     });
   }
+  */
 
   /**
    * Read the contents of a file from Webpack's input filesystem
    */
-  readFile (compilation, filename) {
-    const fs = this.fs || compilation.outputFileSystem;
+  readFile (filename) {
+    const fs = this.fs;
     return new Promise((resolve, reject) => {
       const callback = (err, data) => {
         if (err) reject(err);
@@ -182,18 +187,20 @@ export default class Critters {
   /**
    * Apply critical CSS processing to html-webpack-plugin
    */
-  async process (compiler, compilation, html) {
-    const outputPath = compiler.options.output.path;
-    const publicPath = compiler.options.output.publicPath;
+  async process (html) {
+    // const outputPath = compiler.options.output.path;
+    // const publicPath = compiler.options.output.publicPath;
 
     // Parse the generated HTML in a DOM we can mutate
     const document = createDocument(html);
+
+    document.body.className = this.bodyClasses
 
     // `external:false` skips processing of external sheets
     if (this.options.external !== false) {
       const externalSheets = [].slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
       await Promise.all(externalSheets.map(
-        link => this.embedLinkedStylesheet(link, compilation, outputPath, publicPath)
+        link => this.embedLinkedStylesheet(link)
       ));
     }
 
@@ -237,7 +244,7 @@ export default class Critters {
   /**
    * Inline the target stylesheet referred to by a <link rel="stylesheet"> (assuming it passes `options.filter`)
    */
-  async embedLinkedStylesheet (link, compilation, outputPath, publicPath) {
+  async embedLinkedStylesheet (link) {
     const href = link.getAttribute('href');
     const media = link.getAttribute('media');
     const document = link.ownerDocument;
@@ -249,21 +256,23 @@ export default class Critters {
 
     // path on disk (with output.publicPath removed)
     let normalizedPath = href.replace(/^\//, '');
-    const pathPrefix = (publicPath || '').replace(/(^\/|\/$)/g, '') + '/';
+    const pathPrefix = (this.publicPath || '').replace(/(^\/|\/$)/g, '') + '/';
     if (normalizedPath.indexOf(pathPrefix) === 0) {
       normalizedPath = normalizedPath.substring(pathPrefix.length).replace(/^\//, '');
     }
-    const filename = path.resolve(outputPath, normalizedPath);
+    const filename = path.resolve(this.outputPath, normalizedPath);
 
     // try to find a matching asset by filename in webpack's output (not yet written to disk)
-    const relativePath = path.relative(outputPath, filename).replace(/^\.\//, '');
-    const asset = compilation.assets[relativePath];
+    const relativePath = path.relative(this.outputPath, filename).replace(/^\.\//, '');
+    // const asset = compilation.assets[relativePath];
+    const asset = false
 
     // Attempt to read from assets, falling back to a disk read
-    let sheet = asset && asset.source();
+    // let sheet = asset && asset.source();
+    let sheet = false
     if (!sheet) {
       try {
-        sheet = await this.readFile(compilation, filename);
+        sheet = await this.readFile(filename);
         this.logger.warn(`Stylesheet "${relativePath}" not found in assets, but a file was located on disk.${this.options.pruneSource ? ' This means pruneSource will not be applied.' : ''}`);
       } catch (e) {
         this.logger.warn(`Unable to locate stylesheet: ${relativePath}`);
@@ -287,7 +296,7 @@ export default class Critters {
       style.$$reduce = false;
       this.logger.info(`\u001b[32mInlined all of ${href} (${sheet.length} was below the threshold of ${this.options.inlineThreshold})\u001b[39m`);
       if (asset) {
-        delete compilation.assets[relativePath];
+        // delete compilation.assets[relativePath];
       } else {
         this.logger.warn(`  > ${href} was not found in assets. the resource may still be emitted but will be unreferenced.`);
       }
@@ -299,7 +308,8 @@ export default class Critters {
     style.$$name = href;
     style.$$asset = asset;
     style.$$assetName = relativePath;
-    style.$$assets = compilation.assets;
+    // style.$$assets = compilation.assets;
+    style.$$assets = false;
     style.$$links = [link];
 
     // Allow disabling any mutation of the stylesheet link:
@@ -519,15 +529,15 @@ export default class Critters {
             }
           }
           // delete the webpack asset:
-          delete style.$$assets[style.$$assetName];
+          // delete style.$$assets[style.$$assetName];
           return;
         }
 
         const percent = sheetInverse.length / before.length * 100;
         afterText = `, reducing non-inlined size ${percent | 0}% to ${prettyBytes(sheetInverse.length)}`;
-        style.$$assets[style.$$assetName] = new sources.LineToLineMappedSource(sheetInverse, style.$$assetName, before);
+        // style.$$assets[style.$$assetName] = new sources.LineToLineMappedSource(sheetInverse, style.$$assetName, before);
       } else {
-        this.logger.warn('pruneSource is enabaled, but a style (' + name + ') has no corresponding Webpack asset.');
+        this.logger.warn('pruneSource is enabled, but a style (' + name + ') has no corresponding Webpack asset.');
       }
     }
 
