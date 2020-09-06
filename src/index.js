@@ -63,18 +63,21 @@ const { logger } = require('./util');
  * All optional. Pass them to `new Critters({ ... })`.
  * @public
  * @typedef Options
- * @property {Boolean} external     Inline styles from external stylesheets _(default: `true`)_
+ * @property {Boolean} external Inline styles from external stylesheets _(default: `true`)_
  * @property {Number} inlineThreshold Inline external stylesheets smaller than a given size _(default: `0`)_
  * @property {Number} minimumExternalSize If the non-critical external stylesheet would be below this size, just inline it _(default: `0`)_
  * @property {Boolean} pruneSource  Remove inlined rules from the external stylesheet _(default: `false`)_
  * @property {Boolean} mergeStylesheets Merged inlined stylesheets into a single <style> tag _(default: `true`)_
- * @property {String[]} additionalStylesheets Glob for matching other stylesheets to be used while looking for critical CSS _(default: ``)_.
- * @property {String} preload Preload stylesheets
- * @property {Boolean} asyncLoadCss Load external stylesheets asynchronously
- * @property {Boolean} noscriptFallback Add `<noscript>` fallback to JS-based strategies
+ * @property {Boolean} reduceInlineStyles Reduced all styles to only critical CSS _(default: `true`)_
+ * @property {Boolean} ssrMode Do not compress merged inlined stylesheets (useful if page is prerendered in ssr mode) _(default: `false`)_
+ * @property {String[]} additionalStylesheets Glob for matching other stylesheets to be used while looking for critical CSS _(default: `[]`)_.
+ * @property {String} preload Preload stylesheets _(default: `true`)_
+ * @property {Boolean} asyncLoadCss Load external stylesheets asynchronously _(default: `true`)_
+ * @property {Boolean} noscriptFallback Add `<noscript>` fallback to JS-based strategies _(default: `true`)_
+ * @property {String} noscriptPosition Put `<noscript>` at head tag or at the end of body tag _(default: `body`)_
  * @property {Boolean} inlineFonts  Inline critical font-face rules _(default: `false`)_
  * @property {Boolean} preloadFonts Preloads critical fonts _(default: `true`)_
- * @property {Boolean} fonts        Shorthand for setting `inlineFonts`+`preloadFonts`
+ * @property {Boolean} fonts Shorthand for setting `inlineFonts` and `preloadFonts`
  *  - Values:
  *  - `true` to inline critical font-face rules and preload the fonts
  *  - `false` to don't inline any font-face rules and don't preload fonts
@@ -105,6 +108,7 @@ module.exports = class Critters {
         noscriptFallback: true,
         noscriptPosition: 'body',
         minimumExternalSize: 0,
+        inlineThreshold: 0
       },
       options || {}
     );
@@ -213,7 +217,7 @@ module.exports = class Critters {
   getAffectedStyleTags(document) {
     const styles = [].slice.call(document.querySelectorAll('style'));
 
-    // `inline:false` skips processing of inline stylesheets
+    // `reduceInlineStyles:false` skips processing of inline stylesheets
     if (this.options.reduceInlineStyles === false) {
       return styles.filter((style) => style.$$external);
     }

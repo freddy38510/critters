@@ -47,9 +47,9 @@ const Critters = require('critters');
 
 const c = new Critters({
   // optional configuration (see below)
-})
+});
 
-const res = c.process(html)
+const res = c.process(html);
 ```
 
 That's it! The resultant html will have its critical CSS inlined and the stylesheets lazy-loaded.
@@ -67,18 +67,23 @@ All optional. Pass them to `new Critters({ ... })`.
 - `external` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Inline styles from external stylesheets _(default: `true`)_
 - `inlineThreshold` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** Inline external stylesheets smaller than a given size _(default: `0`)_
 - `minimumExternalSize` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** If the non-critical external stylesheet would be below this size, just inline it _(default: `0`)_
-- `pruneSource` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Remove inlined rules from the external stylesheet _(default: `true`)_
-- `mergeStylesheets` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Merged inlined stylesheets into a
-  single \<style\> tag _(default: `true`)_
-- `additionalStylesheets` **[String[]](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Glob for matching other stylesheets which should be used to evaluate critical CSS _(default: '')_
-- `preload` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Preload stylesheets
-- `noscriptFallback` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Add `<noscript>` fallback to JS-based strategies
+- `pruneSource` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Remove inlined rules from the external stylesheet _(default: `false`)_
+- `mergeStylesheets` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Merged inlined stylesheets into a single `<style>` tag _(default: `true`)_
+- `reduceInlineStyles` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Reduced all styles to only critical CSS _(default: `true`)_
+- `ssrMode` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Do not compress merged inlined stylesheets (useful if page is prerendered in ssr mode) _(default: `false`)_
+- `additionalStylesheets` **[Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)&lt;[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)>** Glob for matching other stylesheets to be used while looking for critical CSS _(default: `[]`)_.
+- `preload` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Preload stylesheets _(default: `true`)_
+- `asyncLoadCss` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Load external stylesheets asynchronously _(default: `true`)_
+- `noscriptFallback` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Add `<noscript>` fallback to JS-based strategies _(default: `true`)_
+- `noscriptPosition` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Where to position `<noscript>`
+  - `body`: _(default)_ position it at the end of `<body>` tag
+  - `head`: position it at `<head>` tag
 - `inlineFonts` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Inline critical font-face rules _(default: `false`)_
 - `preloadFonts` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Preloads critical fonts _(default: `true`)_
-- `fonts` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Shorthand for setting `inlineFonts`+`preloadFonts`- Values:
+- `fonts` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Shorthand for setting `inlineFonts` and `preloadFonts`
   - `true` to inline critical font-face rules and preload the fonts
   - `false` to don't inline any font-face rules and don't preload fonts
-- `keyframes` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Controls which keyframes rules are inlined.- Values:
+- `keyframes` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Controls which keyframes rules are inlined
   - `"critical"`: _(default)_ inline keyframes rules used by the critical CSS
   - `"all"` inline all keyframes rules
   - `"none"` remove all keyframes rules
