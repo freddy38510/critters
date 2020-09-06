@@ -68,7 +68,7 @@ describe('Inline <style> pruning', () => {
 describe('External CSS', () => {
   let output;
   beforeAll(async () => {
-    output = await compileToHtml('external', configure);
+    output = await compileToHtml('external', configure, { pruneSource: true });
   });
 
   it('should inline critical styles', () => {
@@ -99,10 +99,14 @@ describe('External CSS', () => {
 describe('publicPath', () => {
   let output;
   beforeAll(async () => {
-    output = await compileToHtml('external', (config) => {
-      configure(config);
-      config.output.publicPath = '/_public/';
-    });
+    output = await compileToHtml(
+      'external',
+      (config) => {
+        configure(config);
+        config.output.publicPath = '/_public/';
+      },
+      { publicPath: '/_public/', pruneSource: true }
+    );
   });
 
   it('should inline critical styles', () => {
@@ -156,11 +160,11 @@ describe('options', () => {
       expect(preload.parentNode).toBe(output.document.head);
     });
 
-    it('should place a link rel="stylesheet" at the end of <body>', () => {
+    it('should place a link rel="stylesheet" at the end of <head>', () => {
       const link = output.document.querySelector('link[rel="stylesheet"]');
       expect(link).not.toBeNull();
       expect(link).toHaveProperty('href', 'main.css');
-      expect(output.document.body.lastChild).toBe(link);
+      expect(output.document.head.lastChild).toBe(link);
     });
 
     it('should match snapshot', () => {

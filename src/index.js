@@ -14,34 +14,24 @@
  * the License.
  */
 
-import path from 'path';
-import postcss from 'postcss';
-import cssnano from 'cssnano';
-import prettyBytes from 'pretty-bytes';
-import { createDocument, serializeDocument } from './dom';
-import {
+const path = require('path');
+const postcss = require('postcss');
+const cssnano = require('cssnano');
+const prettyBytes = require('pretty-bytes');
+const {
+  createDocument,
+  serializeDocument,
+  serializeElement
+} = require('./dom');
+const {
   parseStylesheet,
   serializeStylesheet,
   walkStyleRules,
   walkStyleRulesWithReverseMirror,
   markOnly,
   applyMarkedSelectors
-} from './css';
-import { logger } from './util';
-
-/**
- * The mechanism to use for lazy-loading stylesheets.
- * _[JS]_ indicates that a strategy requires JavaScript (falls back to `<noscript>`).
- *
- * - **default:** Move stylesheet links to the end of the document and insert preload meta tags in their place.
- * - **"body":** Move all external stylesheet links to the end of the document.
- * - **"media":** Load stylesheets asynchronously by adding `media="not x"` and removing once loaded. _[JS]_
- * - **"swap":** Convert stylesheet links to preloads that swap to `rel="stylesheet"` once loaded. _[JS]_
- * - **"js":** Inject an asynchronous CSS loader similar to [LoadCSS](https://github.com/filamentgroup/loadCSS) and use it to load stylesheets. _[JS]_
- * - **"js-lazy":** Like `"js"`, but the stylesheet is disabled until fully loaded.
- * @typedef {(default|'body'|'media'|'swap'|'js'|'js-lazy')} PreloadStrategy
- * @public
- */
+} = require('./css');
+const { logger } = require('./util');
 
 /**
  * Controls which keyframes rules are inlined.
@@ -79,7 +69,8 @@ import { logger } from './util';
  * @property {Boolean} pruneSource  Remove inlined rules from the external stylesheet _(default: `false`)_
  * @property {Boolean} mergeStylesheets Merged inlined stylesheets into a single <style> tag _(default: `true`)_
  * @property {String[]} additionalStylesheets Glob for matching other stylesheets to be used while looking for critical CSS _(default: ``)_.
- * @property {String} preload       Which {@link PreloadStrategy preload strategy} to use
+ * @property {String} preload Preload stylesheets
+ * @property {Boolean} asyncLoadCss Load external stylesheets asynchronously
  * @property {Boolean} noscriptFallback Add `<noscript>` fallback to JS-based strategies
  * @property {Boolean} inlineFonts  Inline critical font-face rules _(default: `false`)_
  * @property {Boolean} preloadFonts Preloads critical fonts _(default: `true`)_
@@ -96,7 +87,7 @@ import { logger } from './util';
  * @property {String} logLevel      Controls {@link LogLevel log level} of the plugin _(default: `"info"`)_
  */
 
-export default class Critters {
+module.exports = class Critters {
   /** @private */
   constructor(options) {
     this.options = Object.assign(
@@ -108,7 +99,12 @@ export default class Critters {
         reduceInlineStyles: true,
         pruneSource: false,
         additionalStylesheets: [],
-        ssrMode: false
+        ssrMode: false,
+        asyncLoadCss: true,
+        preload: true,
+        noscriptFallback: true,
+        noscriptPosition: 'body',
+        minimumExternalSize: 0,
       },
       options || {}
     );
@@ -119,6 +115,8 @@ export default class Critters {
     }
 
     this.logger = this.options.logger || logger;
+
+    this.noscript = [];
   }
 
   /**
@@ -174,11 +172,39 @@ export default class Critters {
       await this.mergeStylesheets(document);
     }
 
-    // serialize the document back to HTML and we're done
-    const output = serializeDocument(document);
+    let output;
+
+    output = serializeDocument(document, html);
+
+    if (this.options.noscriptFallback) {
+      output = this.addNoscriptToOutput(output);
+    }
+
     const end = process.hrtime.bigint();
-    this.logger.log('Time ' + parseFloat(end - start) / 1000000.0);
+    this.logger.log(
+      'Done in ' + (parseFloat(end - start) / 1000000000.0).toFixed(2) + 's.'
+    );
     return output;
+  }
+
+  addNoscriptToOutput(result) {
+    result = String(result);
+    // Add noscript blocks to the end
+    if (this.noscript.length === 0 || this.options.noscriptPosition === false) {
+      return result;
+    }
+
+    if (this.options.noscriptPosition === 'head') {
+      return result.replace(
+        /([\s\t]*)(<\/\s*head>)/gim,
+        `$1$1${this.noscript.join('\n$1$1')}\n$1$2`
+      );
+    }
+
+    return result.replace(
+      /([\s\t]*)(<\/\s*body>)/gim,
+      `$1$1${this.noscript.join('\n$1$1')}\n$1$2`
+    );
   }
 
   /**
@@ -204,7 +230,6 @@ export default class Critters {
     }
     const first = styles[0];
     let sheet = first.textContent;
-    // console.log(sheet);
     for (let i = 1; i < styles.length; i++) {
       const node = styles[i];
       sheet += node.textContent;
@@ -224,7 +249,19 @@ export default class Critters {
   /**
    * Given href, find the corresponding CSS asset
    */
-  async getCssAsset(href) {
+  async getCssAsset(filename) {
+    let sheet;
+
+    try {
+      sheet = await this.readFile(filename);
+    } catch (e) {
+      this.logger.warn(`Unable to locate stylesheet: ${filename}`);
+    }
+
+    return sheet;
+  }
+
+  getFilename(href) {
     const outputPath = this.options.path;
     const publicPath = this.options.publicPath;
 
@@ -237,17 +274,7 @@ export default class Critters {
         .substring(pathPrefix.length)
         .replace(/^\//, '');
     }
-    const filename = path.resolve(outputPath, normalizedPath);
-
-    let sheet;
-
-    try {
-      sheet = await this.readFile(filename);
-    } catch (e) {
-      this.logger.warn(`Unable to locate stylesheet: ${filename}`);
-    }
-
-    return sheet;
+    return path.resolve(outputPath, normalizedPath);
   }
 
   checkInlineThreshold(link, style, sheet) {
@@ -281,7 +308,9 @@ export default class Critters {
         styleSheetsIncluded.push(cssFile);
         const style = document.createElement('style');
         style.$$external = true;
-        return this.getCssAsset(cssFile, style).then((sheet) => [sheet, style]);
+        const filename = this.getFilename(cssFile)
+
+        return this.getCssAsset(filename, style).then((sheet) => [sheet, style]);
       })
     );
 
@@ -292,14 +321,22 @@ export default class Critters {
     });
   }
 
+  addNoscript(link, document) {
+    const noscript = document.createElement('noscript');
+    noscript.appendChild(link);
+    this.noscript = [
+      ...new Set([
+        ...this.noscript,
+        `<noscript>${serializeElement(noscript)}</noscript>`
+      ])
+    ];
+  }
+
   /**
    * Inline the target stylesheet referred to by a <link rel="stylesheet"> (assuming it passes `options.filter`)
    */
   async embedLinkedStylesheet(link, document) {
     const href = link.getAttribute('href');
-    const media = link.getAttribute('media');
-
-    const preloadMode = this.options.preload;
 
     // skip filtered resources, or network resources if no filter is provided
     if (this.urlFilter ? this.urlFilter(href) : !(href || '').match(/\.css$/)) {
@@ -309,7 +346,8 @@ export default class Critters {
     // the reduced critical CSS gets injected into a new <style> tag
     const style = document.createElement('style');
     style.$$external = true;
-    const sheet = await this.getCssAsset(href, style);
+    const filename = this.getFilename(href);
+    const sheet = await this.getCssAsset(filename, style);
 
     if (!sheet) {
       return;
@@ -318,97 +356,69 @@ export default class Critters {
     style.textContent = sheet;
     style.$$name = href;
     style.$$links = [link];
-    link.parentNode.insertBefore(style, link);
+    link.parentNode.insertBefore(style, link); // insert style before link
 
     if (this.checkInlineThreshold(link, style, sheet)) {
-      return;
-    }
-
-    // CSS loader is only injected for the first sheet, then this becomes an empty string
-    let cssLoaderPreamble =
-      "function $loadcss(u,m,l){(l=document.createElement('link')).rel='stylesheet';l.href=u;document.head.appendChild(l)}";
-    const lazy = preloadMode === 'js-lazy';
-    if (lazy) {
-      cssLoaderPreamble = cssLoaderPreamble.replace(
-        'l.href',
-        "l.media='print';l.onload=function(){l.media=m};l.href"
-      );
+      return; // link removed because inlined totally
     }
 
     // Allow disabling any mutation of the stylesheet link:
-    if (preloadMode === false) return;
+    if (this.options.asyncLoadCss === false) return;
 
-    let noscriptFallback = false;
+    if (
+      this.options.noscriptFallback &&
+      !this.options.preload // avoid duplicate loading of css
+    ) {
+      this.addNoscript(link, document);
+    }
 
-    if (preloadMode === 'body') {
-      document.body.appendChild(link);
-    } else {
-      link.setAttribute('rel', 'preload');
-      link.setAttribute('as', 'style');
-      if (preloadMode === 'js' || preloadMode === 'js-lazy') {
-        const script = document.createElement('script');
-        const js = `${cssLoaderPreamble}$loadcss(${JSON.stringify(href)}${
-          lazy ? ',' + JSON.stringify(media || 'all') : ''
-        })`;
-        // script.appendChild(document.createTextNode(js));
-        script.textContent = js;
-        link.parentNode.insertBefore(script, link.nextSibling);
-        style.$$links.push(script);
-        cssLoaderPreamble = '';
-        noscriptFallback = true;
-      } else if (preloadMode === 'media') {
-        // @see https://github.com/filamentgroup/loadCSS/blob/af1106cfe0bf70147e22185afa7ead96c01dec48/src/loadCSS.js#L26
-        link.setAttribute('rel', 'stylesheet');
-        link.removeAttribute('as');
-        link.setAttribute('media', 'print');
-        link.setAttribute('onload', `this.media='${media || 'all'}'`);
-        noscriptFallback = true;
-      } else if (preloadMode === 'swap') {
-        link.setAttribute('onload', "this.rel='stylesheet'");
-        noscriptFallback = true;
-      } else {
-        const bodyLink = document.createElement('link');
-        bodyLink.setAttribute('rel', 'stylesheet');
-        if (media) bodyLink.setAttribute('media', media);
-        bodyLink.setAttribute('href', href);
-        document.body.appendChild(bodyLink);
-        style.$$links.push(bodyLink);
+    link.setAttribute('rel', 'stylesheet');
+    link.setAttribute('media', 'print');
+    link.setAttribute('onload', "this.media='all'");
+
+      if (this.options.preload && !document.querySelector(`link[rel="preload"][href="${href}"]`)) {
+        const preload = document.createElement('link');
+        preload.setAttribute('href', link.getAttribute('href'));
+        preload.setAttribute('rel', 'preload');
+        preload.setAttribute('as', 'style');
+        link.parentNode.insertBefore(preload, link);
       }
-    }
-
-    if (this.options.noscriptFallback !== false && noscriptFallback) {
-      const noscript = document.createElement('noscript');
-      const noscriptLink = document.createElement('link');
-      noscriptLink.setAttribute('rel', 'stylesheet');
-      noscriptLink.setAttribute('href', href);
-      if (media) noscriptLink.setAttribute('media', media);
-      noscript.appendChild(noscriptLink);
-      link.parentNode.insertBefore(noscript, link.nextSibling);
-      style.$$links.push(noscript);
-    }
   }
 
   /**
    * Prune the source CSS files
    */
-  pruneSource(style, before, sheetInverse) {
+  async pruneSource(style, before, sheetInverse) {
     // if external stylesheet would be below minimum size, just inline everything
     const minSize = this.options.minimumExternalSize;
     const name = style.$$name;
-    if (minSize && sheetInverse.length < minSize) {
-      this.logger.info(
-        `\u001b[32mInlined all of ${name} (non-critical external stylesheet would have been ${sheetInverse.length}b, which was below the threshold of ${minSize})\u001b[39m`
-      );
-      style.textContent = before;
-      // remove any associated external resources/loaders:
-      if (style.$$links) {
-        for (const link of style.$$links) {
-          const parent = link.parentNode;
-          if (parent) parent.removeChild(link);
+    const filename = this.getFilename(name)
+    const asset = await this.getCssAsset(filename)
+
+    if (asset) {
+      const fs = require('fs').promises
+
+      if (minSize && sheetInverse.length < minSize) {
+        this.logger.info(
+          `\u001b[32mInlined all of ${name} (non-critical external stylesheet would have been ${sheetInverse.length}b, which was below the threshold of ${minSize})\u001b[39m`
+        );
+        style.textContent = before;
+        // remove any associated external resources/loaders:
+        if (style.$$links) {
+          for (const link of style.$$links) {
+            const parent = link.parentNode;
+            if (parent) parent.removeChild(link);
+          }
         }
+
+        await fs.unlink(filename)
+
+        return true;
       }
 
-      return true;
+      await fs.writeFile(filename, sheetInverse, 'utf-8')
+    } else {
+      this.logger.warn('pruneSource is enabled, but a style (' + name + ') could not be located.');
     }
 
     return false;
@@ -508,7 +518,7 @@ export default class Critters {
       })
     );
 
-    if (failedSelectors.length !== 0) {
+    if (failedSelectors.length !== 0 && this.options.logLevel === 'debug') {
       this.logger.warn(
         `${
           failedSelectors.length
@@ -592,7 +602,7 @@ export default class Critters {
         compress: this.options.compress !== false
       });
 
-      styleInlinedCompletely = this.pruneSource(style, before, sheetInverse);
+      styleInlinedCompletely = await this.pruneSource(style, before, sheetInverse);
 
       if (styleInlinedCompletely) {
         const percent = (sheetInverse.length / before.length) * 100;

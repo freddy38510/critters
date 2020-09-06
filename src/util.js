@@ -1,6 +1,6 @@
-import chalk from 'chalk';
+const chalk = require('chalk');
 
-export const logger = {
+module.exports.logger = {
   warn(msg) {
     console.error(chalk.yellow(msg));
   },

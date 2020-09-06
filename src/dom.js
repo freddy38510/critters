@@ -14,8 +14,8 @@
  * the License.
  */
 
-import parse5 from 'parse5';
-import select from 'css-select';
+const parse5 = require('parse5');
+const select = require('css-select');
 
 // htmlparser2 has a relatively DOM-like tree format, which we'll massage into a DOM elsewhere
 const treeAdapter = require('parse5-htmlparser2-tree-adapter');
@@ -29,7 +29,7 @@ const PARSE5_OPTS = {
  * The DOM implementation is an htmlparser2 DOM enhanced with basic DOM mutation methods.
  * @param {String} html   HTML to parse into a Document instance
  */
-export function createDocument(html) {
+module.exports.createDocument = function createDocument(html) {
   const document = parse5.parse(html, PARSE5_OPTS);
 
   defineProperties(document, DocumentExtensions);
@@ -49,9 +49,20 @@ export function createDocument(html) {
  * Serialize a Document to an HTML String
  * @param {Document} document   A Document, such as one created via `createDocument()`
  */
-export function serializeDocument(document) {
-  return parse5.serialize(document, PARSE5_OPTS);
-}
+module.exports.serializeDocument = function serializeDocument(document, originalHtml) {
+  const html = parse5.serialize(document, PARSE5_OPTS);
+
+  // Only replace head so we don't mess with the orignal markup
+  // See https://github.com/fb55/htmlparser2/pull/259 (htmlparser2)
+  // See https://runkit.com/582b0e9ebe07a80014bf1e82/58400d2db3ef0f0013bae090 (parse5)
+  // The current parsers have problems with foreign context elements like svg & math
+  return replacePartials(originalHtml, html, 'head');
+};
+
+
+module.exports.serializeElement = function serializeElement(element) {
+  return parse5.serialize(element, PARSE5_OPTS);
+};
 
 /**
  * Methods and descriptors to mix into Element.prototype
@@ -251,3 +262,58 @@ function getText(node) {
   if (treeAdapter.isTextNode(node)) return node.data;
   return '';
 }
+
+/**
+ * Replace all partials defined by tagname in source with the corresponding
+ * partials found in dest
+ * @param {string} source Source HTML String
+ * @param {string} dest Dest HTML String
+ * @param {string} tag Tagname (svg or math)
+ * @returns {array} SVG Strings found in HTML
+ */
+const replacePartials = (source, dest, tag) => {
+  if (!Array.isArray(tag)) {
+    tag = [tag];
+  }
+
+  return tag.reduce((result, tag) => {
+    // Only replace head so we don't mess with the orignal markup
+    const newTags = getPartials(dest, tag);
+    const oldTags = getPartials(result, tag);
+
+    return oldTags.reduce(
+      (string, code, index) => string.replace(code, newTags[index] || code),
+      result
+    );
+  }, source);
+};
+
+/**
+ * Get all subsctings of of the passed tags
+ * Does not work with self closing tags
+ * @param {string} html Html string
+ * @param {string} tag Tagname
+ * @returns {array<string>} Array with aöö substrings
+ */
+const getPartials = (html = '', tag = 'svg') => {
+  const result = [];
+  html.replace(
+    new RegExp(`<${tag}(?:\\s[^>]+)?>`, 'ig'),
+    (match, offset, string) => {
+      if (match.includes('/>')) {
+        result.push(string.slice(offset, offset + match.length));
+      } else {
+        result.push(
+          string.slice(
+            offset,
+            string.indexOf(`</${tag}>`, offset) + `</${tag}>`.length
+          )
+        );
+      }
+
+      return match;
+    }
+  );
+
+  return result;
+};

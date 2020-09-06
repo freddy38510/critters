@@ -18,7 +18,7 @@ import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
-import CrittersWebpackPlugin from '../packages/critters-webpack-plugin/src';
+import Critters from '../src';
 
 // parse a string into a JSDOM Document
 export const parseDom = (html) =>
@@ -68,18 +68,21 @@ export async function compileToHtml(
   configDecorator,
   crittersOptions = {}
 ) {
+  const critters = new Critters({
+    path: `test/fixtures/${fixture}/dist`,
+    compress: false,
+    logLevel: 'silent',
+    ...crittersOptions
+  });
+
   const info = await compile(`fixtures/${fixture}/index.js`, (config) => {
     config = configDecorator(config) || config;
-    config.plugins.push(
-      new CrittersWebpackPlugin({
-        pruneSource: true,
-        compress: false,
-        logLevel: 'silent',
-        ...crittersOptions
-      })
-    );
   });
-  info.html = await readFile(`fixtures/${fixture}/dist/index.html`);
+
+  const file = await readFile(`fixtures/${fixture}/dist/index.html`);
+
+  info.html = await critters.process(file)
   info.document = parseDom(info.html);
+
   return info;
 }
