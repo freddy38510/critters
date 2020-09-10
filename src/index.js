@@ -145,8 +145,6 @@ module.exports = class Critters {
    * Apply critical CSS processing to the html
    */
   async process(html) {
-    const start = process.hrtime.bigint();
-
     // Parse the generated HTML in a DOM we can mutate
     const document = createDocument(html);
 
@@ -184,10 +182,6 @@ module.exports = class Critters {
       output = this.addNoscriptToOutput(output);
     }
 
-    const end = process.hrtime.bigint();
-    this.logger.log(
-      'Done in ' + (parseFloat(end - start) / 1000000000.0).toFixed(2) + 's.'
-    );
     return output;
   }
 
