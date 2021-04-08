@@ -228,11 +228,14 @@ module.exports = class Critters {
     }
     const first = styles[0];
     let sheet = first.textContent;
+
     for (let i = 1; i < styles.length; i++) {
       const node = styles[i];
       sheet += node.textContent;
+      first.attribs = Object.assign(first.attribs, node.attribs)
       node.remove();
     }
+
     if (!this.options.ssrMode && this.options.compress !== false) {
       const before = sheet;
       const processor = postcss([cssnano()]);
