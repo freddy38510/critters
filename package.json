@@ -69,7 +69,7 @@
   "dependencies": {
     "chalk": "^4.1.0",
     "css": "^3.0.0",
-    "cssnano": "^4.1.10",
+    "cssnano": "^4.1.11",
     "parse5": "^6.0.1",
     "parse5-htmlparser2-tree-adapter": "^6.0.1",
     "postcss": "^7.0.32",
