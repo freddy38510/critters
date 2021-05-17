@@ -15,7 +15,7 @@
  */
 
 const parse5 = require('parse5');
-const select = require('css-select');
+const CSSselect = require("css-select");
 
 // htmlparser2 has a relatively DOM-like tree format, which we'll massage into a DOM elsewhere
 const treeAdapter = require('parse5-htmlparser2-tree-adapter');
@@ -188,7 +188,7 @@ const DocumentExtensions = {
       return this.querySelector('body');
     }
   },
- 
+
   head: {
     get() {
       return this.querySelector('head');
@@ -215,14 +215,14 @@ const DocumentExtensions = {
     if (sel === ':root') {
       return this;
     }
-    return select.selectOne(sel, this.documentElement);
+    return CSSselect.selectOne(sel, this.documentElement);
   },
 
   querySelectorAll(sel) {
     if (sel === ':root') {
       return this;
     }
-    return select(sel, this.documentElement);
+    return CSSselect.selectAll(sel, this.documentElement);
   }
 };
 
