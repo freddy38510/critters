@@ -1,3 +1,7 @@
 language: node_js
 node_js: node
-cache: npm
+cache: yarn
+# safelist
+branches:
+  only:
+  - standalone
