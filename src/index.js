@@ -286,7 +286,7 @@ module.exports = class Critters {
       const href = style.$$name;
       style.$$reduce = false;
       this.logger.info(
-        `\u001b[32mInlined all of ${href} (${sheet.length} was below the threshold of ${this.options.inlineThreshold})\u001b[39m`
+        `Inlined all of ${href} (${sheet.length} was below the threshold of ${this.options.inlineThreshold})`
       );
       link.remove();
       return true;
@@ -401,7 +401,7 @@ module.exports = class Critters {
 
       if (minSize && sheetInverse.length < minSize) {
         this.logger.info(
-          `\u001b[32mInlined all of ${name} (non-critical external stylesheet would have been ${sheetInverse.length}b, which was below the threshold of ${minSize})\u001b[39m`
+          `Inlined all of ${name} (non-critical external stylesheet would have been ${sheetInverse.length}b, which was below the threshold of ${minSize})`
         );
         style.textContent = before;
         // remove any associated external resources/loaders:
@@ -621,7 +621,7 @@ module.exports = class Critters {
     // output stats
     const percent = ((sheet.length / before.length) * 100) | 0;
     this.logger.info(
-      '\u001b[32mInlined ' +
+      'Inlined ' +
         prettyBytes(sheet.length) +
         ' (' +
         percent +
@@ -629,8 +629,7 @@ module.exports = class Critters {
         prettyBytes(before.length) +
         ') of ' +
         name +
-        afterText +
-        '.\u001b[39m'
+        afterText
     );
   }
 }
