@@ -149,7 +149,7 @@ _[JS]_ indicates that a strategy requires JavaScript (falls back to `<noscript>`
 - **"js":** Inject an asynchronous CSS loader similar to [LoadCSS](https://github.com/filamentgroup/loadCSS) and use it to load stylesheets. _[JS]_
 - **"js-lazy":** Like `"js"`, but the stylesheet is disabled until fully loaded.
 
-Type: (default | `"body"` \| `"media"` \| `"swap"` \| `"js"` \| `"js-lazy"`)
+Type: (default | `"body"` \| `"media"` \| `"swap"` \| `"swap-high"` \| `"js"` \| `"js-lazy"`)
 
 ## Similar Libraries
 
