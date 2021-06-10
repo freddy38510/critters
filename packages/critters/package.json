@@ -1,5 +1,5 @@
 {
-  "name": "critters",
+  "name": "@freddy38510/critters",
   "version": "0.0.10",
   "description": "Inline critical CSS and lazy-load the rest.",
   "main": "dist/critters.js",
