@@ -73,11 +73,20 @@
       }
     }
   },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.11.0",
+    "@commitlint/cli": "^12.1.4",
+    "@commitlint/config-conventional": "^12.1.4",
     "@types/jest": "^26.0.23",
     "babel-core": "^6.26.0",
     "babel-jest": "^26.3.0",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "^3.3.0",
     "documentation": "^13.0.2",
     "eslint": "^7.6.0",
     "eslint-config-prettier": "^6.11.0",
