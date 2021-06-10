@@ -34,8 +34,8 @@ import { createLogger } from './util';
  *
  * - **default:** Move stylesheet links to the end of the document and insert preload meta tags in their place.
  * - **"body":** Move all external stylesheet links to the end of the document.
- * - **"media":** Load stylesheets asynchronously by adding `media="not x"` and removing once loaded. <kbd>JS</kbd>
- * - **"swap":** Convert stylesheet links to preloads that swap to `rel="stylesheet"` once loaded ([details](https://www.filamentgroup.com/lab/load-css-simpler/#the-code)). <kbd>JS</kbd>
+ * - **"media":** Load stylesheets asynchronously by adding `media="print"` and swap to `media="all"` once loaded ([details](http://filamentgroup.github.io/loadCSS/test/mediatoggle.html/)). <kbd>JS</kbd>
+ * - **"swap":** Convert stylesheet links to preloads that swap to `rel="stylesheet"` once loaded. <kbd>JS</kbd>
  * - **"swap-high":** Use `<link rel="alternate stylesheet preload">` and swap to `rel="stylesheet"` once loaded ([details](http://filamentgroup.github.io/loadCSS/test/new-high.html)). <kbd>JS</kbd>
  * - **"js":** Inject an asynchronous CSS loader similar to [LoadCSS](https://github.com/filamentgroup/loadCSS) and use it to load stylesheets. <kbd>JS</kbd>
  * - **"js-lazy":** Like `"js"`, but the stylesheet is disabled until fully loaded.
@@ -362,7 +362,7 @@ export default class Critters {
         cssLoaderPreamble = '';
         noscriptFallback = true;
       } else if (preloadMode === 'media') {
-        // @see https://github.com/filamentgroup/loadCSS/blob/af1106cfe0bf70147e22185afa7ead96c01dec48/src/loadCSS.js#L26
+        // @see http://filamentgroup.github.io/loadCSS/test/mediatoggle.html
         link.setAttribute('rel', 'stylesheet');
         link.removeAttribute('as');
         link.setAttribute('media', 'print');
