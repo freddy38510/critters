@@ -145,6 +145,7 @@ _[JS]_ indicates that a strategy requires JavaScript (falls back to `<noscript>`
 - **"body":** Move all external stylesheet links to the end of the document.
 - **"media":** Load stylesheets asynchronously by adding `media="not x"` and removing once loaded. _[JS]_
 - **"swap":** Convert stylesheet links to preloads that swap to `rel="stylesheet"` once loaded. _[JS]_
+- **"swap-high":** Use `<link rel="alternate stylesheet preload">` and swap to `rel="stylesheet"` once loaded ([details](http://filamentgroup.github.io/loadCSS/test/new-high.html)). _[JS]_
 - **"js":** Inject an asynchronous CSS loader similar to [LoadCSS](https://github.com/filamentgroup/loadCSS) and use it to load stylesheets. _[JS]_
 - **"js-lazy":** Like `"js"`, but the stylesheet is disabled until fully loaded.
 
