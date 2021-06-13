@@ -138,6 +138,7 @@ export default class CrittersWebpackPlugin extends Critters {
 
     // try to find a matching asset by filename in webpack's output (not yet written to disk)
     const relativePath = path
+      .posix
       .relative(outputPath, filename)
       .replace(/^\.\//, '');
     const asset = this.compilation.assets[relativePath]; // compilation.assets[relativePath];
