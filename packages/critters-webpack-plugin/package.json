@@ -45,7 +45,7 @@
     "prepack": "yarn -s build"
   },
   "dependencies": {
-    "@freddy38510/critters": "^0.0.10",
+    "@freddy38510/critters": "^0.0.11",
     "minimatch": "^3.0.4",
     "webpack-log": "^3.0.1",
     "webpack-sources": "^1.3.0"
