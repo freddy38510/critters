@@ -25,6 +25,7 @@ describe('Critters', () => {
   test('Basic Usage', async () => {
     const critters = new Critters({
       reduceInlineStyles: false,
+      logLevel: 'silent',
       path: '/'
     });
     const assets = {
