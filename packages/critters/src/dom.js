@@ -182,6 +182,12 @@ const DocumentExtensions = {
     }
   },
 
+  head: {
+    get() {
+      return this.querySelector('head');
+    }
+  },
+
   createElement(name) {
     return treeAdapter.createElement(name, null, []);
   },
