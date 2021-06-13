@@ -29,6 +29,7 @@
     "build": "yarn -s build:main && yarn -s build:webpack",
     "build:main": "yarn -s workspace @freddy38510/critters build",
     "build:webpack": "yarn -s workspace @freddy38510/critters-webpack-plugin build",
+    "release": "HUSKY=0 standard-version --lerna-package",
     "prepare": "husky install",
     "test": "jest --coverage"
   },
@@ -81,6 +82,7 @@
     "jsdom": "^16.6.0",
     "lerna": "^4.0.0",
     "microbundle": "^0.12.3",
-    "prettier": "^2.3.0"
+    "prettier": "^2.3.0",
+    "standard-version": "^9.3.0"
   }
 }
