@@ -26,10 +26,9 @@
     ]
   },
   "scripts": {
-    "build": "npm run -s build:main && npm run -s build:webpack",
-    "build:main": "npm run -s workspace @freddy38510/critters build",
-    "build:webpack": "npm run -s workspace @freddy38510/critters-webpack-plugin build",
-    "release": "npm run build -s && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish",
+    "build": "yarn -s build:main && yarn -s build:webpack",
+    "build:main": "yarn -s workspace @freddy38510/critters build",
+    "build:webpack": "yarn -s workspace @freddy38510/critters-webpack-plugin build",
     "prepare": "husky install",
     "test": "jest --coverage"
   },
