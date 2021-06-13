@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/freddy38510/critters/compare/critters-webpack-plugin-v3.1.0...critters-webpack-plugin-v3.2.0) (2021-06-13)
+
+
+### Bug Fixes
+
+* **critters-webpack-plugin:** do not explicitly require html-webpack-plugin ([73bf2d4](https://github.com/freddy38510/critters/commit/73bf2d473c67667f50415a226bee26a01b0869d6))
+
 ## 3.1.0 (2021-06-13)
 
 
