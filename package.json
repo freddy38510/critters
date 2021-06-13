@@ -32,26 +32,6 @@
     "prepare": "husky install",
     "test": "jest --coverage"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "coverageReporters": [
-      "text"
-    ],
-    "moduleNameMapper": {
-      "^critters$": "<rootDir>/packages/critters/src/index.js"
-    },
-    "collectCoverageFrom": [
-      "packages/*/src/**/*.js"
-    ],
-    "modulePaths": [
-      "<rootDir>/packages/critters-webpack-plugin/node_modules",
-      "<rootDir>/packages/critters/node_modules"
-    ],
-    "watchPathIgnorePatterns": [
-      "node_modules",
-      "dist"
-    ]
-  },
   "prettier": {
     "singleQuote": true,
     "trailingComma": "none"
