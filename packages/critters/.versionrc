@@ -1,0 +1,5 @@
+{
+  "path": ".",
+  "tag-prefix": "critters-v",
+  "releaseCommitMessageFormat": "chore(release): critters@{{currentTag}}"
+}

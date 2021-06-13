@@ -1,0 +1,5 @@
+{
+  "path": ".",
+  "tag-prefix": "critters-webpack-plugin-v",
+  "releaseCommitMessageFormat": "chore(release): critters-webpack-plugin@{{currentTag}}"
+}

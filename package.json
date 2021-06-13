@@ -29,7 +29,10 @@
     "build": "yarn -s build:main && yarn -s build:webpack",
     "build:main": "yarn -s workspace @freddy38510/critters build",
     "build:webpack": "yarn -s workspace @freddy38510/critters-webpack-plugin build",
-    "release": "HUSKY=0 standard-version --lerna-package",
+    "release": "yarn -s release:main && yarn -s release:webpack",
+    "release:main": "HUSKY=0 yarn --cwd packages/critters run standard-version --lerna-package @freddy38510/critters",
+    "release:webpack": "HUSKY=0 yarn --cwd packages/critters-webpack-plugin run standard-version --lerna-package @freddy38510/critters-webpack-plugin",
+    "lerna:bootstrap": "yarn lerna bootstrap --use-workspaces",
     "prepare": "husky install",
     "test": "jest --coverage"
   },
