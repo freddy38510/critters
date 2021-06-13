@@ -150,10 +150,9 @@ export default class CrittersWebpackPlugin extends Critters {
       try {
         sheet = await this.readFile(this.compilation, filename);
         this.logger.warn(
-          `Stylesheet "${relativePath}" not found in assets, but a file was located on disk.${
-            this.options.pruneSource
-              ? ' This means pruneSource will not be applied.'
-              : ''
+          `Stylesheet "${relativePath}" not found in assets, but a file was located on disk.${this.options.pruneSource
+            ? ' This means pruneSource will not be applied.'
+            : ''
           }`
         );
       } catch (e) {
@@ -233,9 +232,7 @@ export default class CrittersWebpackPlugin extends Critters {
       );
     } else {
       this.logger.warn(
-        'pruneSource is enabled, but a style (' +
-          name +
-          ') has no corresponding Webpack asset.'
+        `pruneSource is enabled, but a style (${name}) has no corresponding Webpack asset.`
       );
     }
 

@@ -189,7 +189,7 @@ export default class Critters {
     // serialize the document back to HTML and we're done
     const output = serializeDocument(document);
     const end = process.hrtime.bigint();
-    this.logger.info('Time ' + parseFloat(end - start) / 1000000.0);
+    this.logger.info(`Time ${parseFloat(end - start) / 1000000.0}`);
     return output;
   }
 
@@ -625,17 +625,9 @@ export default class Critters {
 
     // output stats
     const percent = ((sheet.length / before.length) * 100) | 0;
+
     this.logger.info(
-      'Inlined ' +
-        prettyBytes(sheet.length) +
-        ' (' +
-        percent +
-        '% of original ' +
-        prettyBytes(before.length) +
-        ') of ' +
-        name +
-        afterText +
-        '.'
+      `Inlined ${prettyBytes(sheet.length)} (${percent}% of original ${prettyBytes(before.length)}) of ${name}${afterText}.`
     );
   }
 }
