@@ -86,7 +86,11 @@ export default class CrittersWebpackPlugin extends Critters {
         return;
       }
       if (compilation.options.plugins.find(item => item.constructor && item.constructor.name === 'HtmlWebpackPlugin')) {
-        require('html-webpack-plugin').getHooks(compilation).beforeEmit.tapAsync(PLUGIN_NAME, (htmlPluginData, callback) => {
+        const [HtmlWebpackPlugin] = compiler.options.plugins.filter(
+          (plugin) => plugin.constructor.name === 'HtmlWebpackPlugin'
+        );
+
+        HtmlWebpackPlugin.constructor.getHooks(compilation).beforeEmit.tapAsync(PLUGIN_NAME, (htmlPluginData, callback) => {
           this.fs = compilation.outputFileSystem;
           this.compilation = compilation;
           this.process(htmlPluginData.html)
