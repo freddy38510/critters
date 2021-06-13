@@ -18,7 +18,7 @@ import path from 'path';
 import minimatch from 'minimatch';
 import sources from 'webpack-sources';
 import log from 'webpack-log';
-import Critters from 'critters';
+import Critters from '@freddy38510/critters';
 import { tap } from './util';
 
 // Used to annotate this plugin's hooks in Tappable invocations

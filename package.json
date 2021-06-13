@@ -27,8 +27,8 @@
   },
   "scripts": {
     "build": "npm run -s build:main && npm run -s build:webpack",
-    "build:main": "cd packages/critters && npm run -s build",
-    "build:webpack": "cd packages/critters-webpack-plugin && npm run -s build",
+    "build:main": "npm run -s workspace @freddy38510/critters build",
+    "build:webpack": "npm run -s workspace @freddy38510/critters-webpack-plugin build",
     "release": "npm run build -s && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish",
     "prepare": "husky install",
     "test": "jest --coverage"
