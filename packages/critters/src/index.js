@@ -236,7 +236,7 @@ export default class Critters {
 
     // CHECK - the output path
     // path on disk (with output.publicPath removed)
-    let normalizedPath = href.replace(/^\//, '');
+    let normalizedPath = href.replace(/^\//, '').replace(/\?\w+$/, '');
     const pathPrefix = (publicPath || '').replace(/(^\/|\/$)/g, '') + '/';
     if (normalizedPath.indexOf(pathPrefix) === 0) {
       normalizedPath = normalizedPath
