@@ -220,6 +220,7 @@ export default class Critters {
     for (let i = 1; i < styles.length; i++) {
       const node = styles[i];
       sheet += node.textContent;
+      first.attribs = Object.assign(first.attribs, node.attribs);
       node.remove();
     }
 
