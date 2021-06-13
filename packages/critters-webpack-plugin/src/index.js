@@ -82,39 +82,52 @@ export default class CrittersWebpackPlugin extends Critters {
               .catch(callback);
           }
         );
-      } else {
-        // If html-webpack-plugin isn't used, process the first HTML asset as an optimize step
-        tap(
-          compilation,
-          'optimize-assets',
-          PLUGIN_NAME,
-          true,
-          (assets, callback) => {
-            this.fs = compilation.outputFileSystem;
-            this.compilation = compilation;
 
-            let htmlAssetName;
-            for (const name in assets) {
-              if (name.match(/\.html$/)) {
-                htmlAssetName = name;
-                break;
-              }
-            }
-            if (!htmlAssetName) {
-              return callback(Error('Could not find HTML asset.'));
-            }
-            const html = assets[htmlAssetName].source();
-            if (!html) return callback(Error('Empty HTML asset.'));
-
-            this.process(String(html))
-              .then((html) => {
-                assets[htmlAssetName] = new sources.RawSource(html);
-                callback();
-              })
-              .catch(callback);
-          }
-        );
+        return;
       }
+      if (compilation.options.plugins.find(item => item.constructor && item.constructor.name === 'HtmlWebpackPlugin')) {
+        require('html-webpack-plugin').getHooks(compilation).beforeEmit.tapAsync(PLUGIN_NAME, (htmlPluginData, callback) => {
+          this.fs = compilation.outputFileSystem;
+          this.compilation = compilation;
+          this.process(htmlPluginData.html)
+            .then(html => { callback(null, { html }); })
+            .catch(callback);
+        });
+
+        return;
+
+      }
+      // If html-webpack-plugin isn't used, process the first HTML asset as an optimize step
+      tap(
+        compilation,
+        'optimize-assets',
+        PLUGIN_NAME,
+        true,
+        (assets, callback) => {
+          this.fs = compilation.outputFileSystem;
+          this.compilation = compilation;
+
+          let htmlAssetName;
+          for (const name in assets) {
+            if (name.match(/\.html$/)) {
+              htmlAssetName = name;
+              break;
+            }
+          }
+          if (!htmlAssetName) {
+            return callback(Error('Could not find HTML asset.'));
+          }
+          const html = assets[htmlAssetName].source();
+          if (!html) return callback(Error('Empty HTML asset.'));
+
+          this.process(String(html))
+            .then((html) => {
+              assets[htmlAssetName] = new sources.RawSource(html);
+              callback();
+            })
+            .catch(callback);
+        }
+      );
     });
   }
 
