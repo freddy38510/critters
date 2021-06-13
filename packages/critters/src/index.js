@@ -161,7 +161,7 @@ export default class Critters {
     const document = createDocument(html);
 
     if (this.options.additionalStylesheets.length > 0) {
-      this.embedAdditionalStylesheet(document);
+      await this.embedAdditionalStylesheet(document);
     }
 
     // `external:false` skips processing of external sheets
