@@ -31,33 +31,49 @@ export const parseDom = (html) =>
 export const readFile = (file) =>
   promisify(fs.readFile)(path.resolve(__dirname, file), 'utf8');
 
-// invoke webpack on a given entry module, optionally mutating the default configuration
-export function compile(entry, configDecorator) {
-  return new Promise((resolve, reject) => {
-    const context = path.dirname(path.resolve(__dirname, entry));
-    entry = path.basename(entry);
-    let config = {
-      context,
-      entry: path.resolve(context, entry),
-      output: {
-        path: path.resolve(__dirname, path.resolve(context, 'dist')),
-        filename: 'bundle.js',
-        chunkFilename: '[name].chunk.js'
-      },
-      resolveLoader: {
-        modules: [path.resolve(__dirname, '../node_modules')]
-      },
-      module: {
-        rules: []
-      },
+// invoke webpack on a given fixture module, optionally mutating the default configuration
+export function compile(fixture, configDecorator) {
+  const context = path.dirname(path.resolve(__dirname, fixture));
+  fixture = path.basename(fixture);
+
+  let config = {
+    context,
+    mode: 'development',
+    entry: path.resolve(context, fixture),
+    output: {
+      path: path.resolve(__dirname, path.resolve(context, 'dist')),
+      filename: 'bundle.js',
+      chunkFilename: '[name].chunk.js'
+    },
+    resolveLoader: {
+      modules: [path.resolve(__dirname, '../node_modules')]
+    },
+    module: {
+      rules: []
+    },
+    plugins: [],
     optimization: {
       minimize: false,
     }
+  };
+  if (configDecorator) {
+    config = configDecorator(config) || config;
+  }
 
-    webpack(config, (err, stats) => {
-      if (err) return reject(err);
+  const compiler = webpack(config)
+
+  return new Promise((resolve, reject) => {
+    compiler.run((err, stats) => {
+      if (err) {
+        reject(err);
+      }
+
       const info = stats.toJson();
-      if (stats.hasErrors()) return reject(info.errors.join('\n'));
+
+      if (stats.hasErrors()) {
+        reject(info.errors.join('\n'));
+      }
+
       resolve(info);
     });
   });
