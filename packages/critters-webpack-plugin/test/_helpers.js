@@ -50,10 +50,8 @@ export function compile(entry, configDecorator) {
       module: {
         rules: []
       },
-      plugins: []
-    };
-    if (configDecorator) {
-      config = configDecorator(config) || config;
+    optimization: {
+      minimize: false,
     }
 
     webpack(config, (err, stats) => {
